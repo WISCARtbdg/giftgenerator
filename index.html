@@ -85,17 +85,17 @@ if (user.photo_url) document.getElementById('avatar').src = user.photo_url;
 
 /* 3. Каталог подарков (без красного) */
 const gifts = [
-  {id:1,gif: '/gift-app/стикеры тг/снуп дог/снуп1.gif',color:'#30A4F2'}, // голубой
+  {id:1,gif: 'snup1.gif',color:'#30A4F2'}, // голубой
 ];
 const backgrounds = ['#30A4F2','#FFCC00','#6C5CFF','#00C896'];
 
-/* 4. Рендер списков */
-const giftList = document.getElementById('gift-list');
+/* Рендер списка */
 gifts.forEach(g => {
   const img = document.createElement('img');
   img.className = 'gift-option';
-  img.src = g.gif;
-  img.width = 40;                // маленькое превью
+  img.src = g.gif;       // <-- путь к GIF
+  img.width = 40;
+  img.height = 40;
   img.onclick = () => selectGift(g, img);
   giftList.appendChild(img);
 });
@@ -106,6 +106,16 @@ backgrounds.forEach(c=>{
   d.onclick=()=>selectBg(c,d);
   bgList.appendChild(d);
 });
+/* Превью поверх аватара */
+function preview(){
+  const layer = document.getElementById('gift-layer');
+  if (selectedGift){
+    layer.src = selectedGift.gif; // <-- тот же путь
+    layer.style.display = 'block';
+  } else {
+    layer.style.display = 'none';
+  }
+}
   /* 5. Выборы и превью */
 let selectedGift=null, selectedBg=null;
 function selectGift(g,el){
