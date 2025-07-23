@@ -1,25 +1,168 @@
-git init
-git add .
-git commit -m "init"
-git branch -M main
-git remote add origin https://github.com/ТВОЙ_ЛОГИН/gift-app.git
-git push -u origin main
-` |
-
----
-
-### 4. Минимальный код, который уже работает
-
-```html
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8">
-<title>Hello Telegram!</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8">
+  <title>Gift Profile Mini-App</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <!-- Подключаем официальное SDK Telegram WebApp -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- Быстрые стили (без красного) -->
+  <style>
+    :root{
+      --tg-blue:#30A4F2;
+      --tg-yellow:#FFCC00;
+      --tg-violet:#6C5CFF;
+      --tg-teal:#00C896;
+      --bg-body:#FFFFFF;
+      --bg-modal:rgba(0,0,0,0.75);
+      --bg-btn:#1D9BF0;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;font-family:sans-serif;}
+    body{background:var(--bg-body);color:#222;text-align:center;min-height:100vh;display:flex;flex-direction:column;align-items:center;}
+    /* Аватар + слой подарка */
+    #avatar-box{position:relative;margin-top:40px;}
+    #avatar{width:160px;height:160px;border-radius:50%;object-fit:cover;border:4px solid var(--tg-blue);}
+    #gift-layer{position:absolute;inset:0;pointer-events:none;}
+    /* Имя */
+    #name{margin-top:12px;font-size:20px;font-weight:600;}
+    /* Нижняя фикс-кнопка */
+    #gift-btn{
+      position:fixed;left:50%;bottom:16px;transform:translateX(-50%);
+      background:var(--bg-btn);color:#fff;border:none;border-radius:24px;
+      padding:14px 32px;font-size:18px;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.15);
+    }
+    /* Модалка */
+    #modal{display:none;position:fixed;inset:0;background:var(--bg-modal);padding:24px;overflow:auto;}
+    #modal.show{display:block;}
+    #modal-inner{background:#fff;border-radius:12px;padding:20px;max-width:420px;margin:40px auto;}
+    h3{margin:12px 0 8px;font-size:18px;}
+    .gift-option{font-size:36px;cursor:pointer;margin:6px;filter:grayscale(20%);}
+    .gift-option.selected{transform:scale(1.3);}
+    .bg-option{width:36px;height:36px;border-radius:50%;display:inline-block;cursor:pointer;margin:4px;border:2px solid transparent;}
+    .bg-option.selected{border-color:#000;}
+    #save{margin-top:18px;padding:10px 24px;font-size:16px;background:var(--tg-teal);border:none;border-radius:20px;color:#fff;cursor:pointer;}
+  </style>
 </head>
-<body style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif">
-<h1>Привет, Mini App!</h1>
-<p>Эта страница раздаётся из файла <code>index.html</code>.</p>
+
+<body>
+  <!-- Блок аватара -->
+  <div id="avatar-box">
+    <img id="avatar" src="https://placehold.co/160x160?text=%F0%9F%92%BB" alt="avatar">
+    <canvas id="gift-layer"></canvas>
+  </div>
+  <div id="name">Гость</div>
+
+  <!-- Кнопка внизу -->
+  <button id="gift-btn">Подарки 🎁</button>
+
+  <!-- Модальное окно -->
+  <div id="modal">
+    <div id="modal-inner">
+      <h3>Выбери подарок</h3>
+      <div id="gift-list"></div>
+
+      <h3>Цвет фона</h3>
+      <div id="bg-list"></div>
+
+      <button id="save">Закрепить</button>
+    </div>
+  </div>
+
+<script>
+/* 1. Telegram WebApp объект */
+const tg = window.Telegram.WebApp;
+tg.ready();                         // говорим Telegram, что страница готова
+const user = tg.initDataUnsafe?.user || {}; // данные юзера (id, имя, фото)  [oai_citation:0‡core.telegram.org](https://core.telegram.org/bots/webapps?utm_source=chatgpt.com) [oai_citation:1‡GitHub](https://github.com/revenkroz/telegram-web-app-bot-example/discussions/22?utm_source=chatgpt.com)
+
+/* 2. Заполняем аватар и имя */
+document.getElementById('name').textContent = user.first_name || 'Гость';
+if (user.photo_url) document.getElementById('avatar').src = user.photo_url;
+
+/* 3. Каталог подарков (без красного) */
+const gifts = [
+  {id:1,emoji:'🎂',color:'#30A4F2'}, // голубой
+  {id:2,emoji:'🎉',color:'#FFCC00'}, // жёлтый
+  {id:3,emoji:'🐱',color:'#6C5CFF'}  // фиолетовый
+];
+const backgrounds = ['#30A4F2','#FFCC00','#6C5CFF','#00C896'];
+
+/* 4. Рендер списков */
+const giftList = document.getElementById('gift-list');
+gifts.forEach(g=>{
+  const span=document.createElement('span');
+  span.className='gift-option';
+  span.textContent=g.emoji;
+  span.onclick=()=>selectGift(g,span);
+  giftList.appendChild(span);
+});
+const bgList=document.getElementById('bg-list');
+backgrounds.forEach(c=>{
+  const d=document.createElement('span');
+  d.className='bg-option';d.style.background=c;
+  d.onclick=()=>selectBg(c,d);
+  bgList.appendChild(d);
+});
+/* 5. Выборы и превью */
+let selectedGift=null, selectedBg=null;
+function selectGift(g,el){
+  selectedGift=g;
+  document.querySelectorAll('.gift-option').forEach(x=>x.classList.remove('selected'));
+  el.classList.add('selected');
+  preview();
+}
+function selectBg(c,el){
+  selectedBg=c;
+  document.querySelectorAll('.bg-option').forEach(x=>x.classList.remove('selected'));
+  el.classList.add('selected');
+  preview();
+}
+function preview(){
+  // фон страницы
+  if(selectedBg) document.body.style.background=selectedBg;
+  // рисуем на canvas
+  const cv=document.getElementById('gift-layer');
+  const ctx=cv.getContext('2d');
+  cv.width=cv.height=160;
+  ctx.clearRect(0,0,160,160);
+  if(selectedGift){
+    ctx.font='64px sans-serif';
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText(selectedGift.emoji,80,80);
+  }
+}
+
+/* 6. Модалка */
+document.getElementById('gift-btn').onclick=()=>document.getElementById('modal').classList.add('show');
+document.getElementById('modal').onclick=e=>{
+  if(e.target.id==='modal') document.getElementById('modal').classList.remove('show');
+};
+
+/* 7. Сохраняем на сервер (backend нужен позже) */
+document.getElementById('save').onclick=async()=>{
+  document.getElementById('modal').classList.remove('show');
+  const payload={initData:tg.initData, gift:selectedGift, bg:selectedBg};
+  try{
+    await fetch('/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  }catch(e){console.warn('Сервер недоступен, но локально всё ок');}
+};
+
+/* 8. Подгружаем сохранённые настройки при запуске */
+(async()=>{
+  try{
+    const res=await fetch(`/user/${user.id}`);
+    if(res.ok){
+      const data=await res.json();
+      if(data.bg) selectBg(data.bg, Array.from(bgList.children).find(x=>x.style.background===data.bg));
+      if(data.gift){
+        const g=gifts.find(i=>i.id===data.gift.id);
+        const el=Array.from(giftList.children).find(x=>x.textContent===g?.emoji);
+        if(g&&el) selectGift(g,el);
+      }
+    }
+  }catch(e){/* пассивно игнорируем */ }
+})();
+</script>
 </body>
 </html>
