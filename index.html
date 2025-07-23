@@ -23,7 +23,11 @@
     /* Аватар + слой подарка */
     #avatar-box{position:relative;margin-top:40px;}
     #avatar{width:160px;height:160px;border-radius:50%;object-fit:cover;border:4px solid var(--tg-blue);}
-    #gift-layer{position:absolute;inset:0;pointer-events:none;}
+    #gift-layer{
+  position:absolute;inset:0;
+  width:160px;height:160px;
+  pointer-events:none;           /* клики проходят сквозь */
+}
     /* Имя */
     #name{margin-top:12px;font-size:20px;font-weight:600;}
     /* Нижняя фикс-кнопка */
@@ -49,7 +53,7 @@
   <!-- Блок аватара -->
   <div id="avatar-box">
     <img id="avatar" src="https://placehold.co/160x160?text=%F0%9F%92%BB" alt="avatar">
-    <canvas id="gift-layer"></canvas>
+    <img id="gift-layer" src="" alt="" style="display:none;">
   </div>
   <div id="name">Гость</div>
 
@@ -81,9 +85,7 @@ if (user.photo_url) document.getElementById('avatar').src = user.photo_url;
 
 /* 3. Каталог подарков (без красного) */
 const gifts = [
-  {id:1,img:'снуп1.gif',color:'#30A4F2'}, // голубой
-  {id:2,emoji:'🎉',color:'#FFCC00'}, // жёлтый
-  {id:3,emoji:'🐱',color:'#6C5CFF'}  // фиолетовый
+  {id:1,gif: '/стикеры тг/снуп дог/снуп1.gif',color:'#30A4F2'}, // голубой
 ];
 const backgrounds = ['#30A4F2','#FFCC00','#6C5CFF','#00C896'];
 
