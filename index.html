@@ -58,7 +58,7 @@
   <div id="name">Гость</div>
 
   <!-- Кнопка внизу -->
-  <button id="gift-btn">Подарки 🎁</button>
+  <button id="gift-btn">Подарки </button>
 
   <!-- Модальное окно -->
   <div id="modal">
@@ -91,12 +91,13 @@ const backgrounds = ['#30A4F2','#FFCC00','#6C5CFF','#00C896'];
 
 /* 4. Рендер списков */
 const giftList = document.getElementById('gift-list');
-gifts.forEach(g=>{
-  const span=document.createElement('span');
-  span.className='gift-option';
-  span.textContent=g.emoji;
-  span.onclick=()=>selectGift(g,span);
-  giftList.appendChild(span);
+gifts.forEach(g => {
+  const img = document.createElement('img');
+  img.className = 'gift-option';
+  img.src = g.gif;
+  img.width = 40;                // маленькое превью
+  img.onclick = () => selectGift(g, img);
+  giftList.appendChild(img);
 });
 const bgList=document.getElementById('bg-list');
 backgrounds.forEach(c=>{
@@ -120,18 +121,14 @@ function selectBg(c,el){
   preview();
 }
 function preview(){
-  // фон страницы
-  if(selectedBg) document.body.style.background=selectedBg;
-  // рисуем на canvas
-  const cv=document.getElementById('gift-layer');
-  const ctx=cv.getContext('2d');
-  cv.width=cv.height=160;
-  ctx.clearRect(0,0,160,160);
-  if(selectedGift){
-    ctx.font='64px sans-serif';
-    ctx.textAlign='center';
-    ctx.textBaseline='middle';
-    ctx.fillText(selectedGift.emoji,80,80);
+  if (selectedBg) document.body.style.background = selectedBg;
+
+  const giftImg = document.getElementById('gift-layer');
+  if (selectedGift){
+    giftImg.src = selectedGift.gif;
+    giftImg.style.display = 'block';
+  } else {
+    giftImg.style.display = 'none';
   }
 }
 
