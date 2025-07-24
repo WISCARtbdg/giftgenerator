@@ -31,7 +31,7 @@
   margin-top:6px; font-size:14px; color:#FFC107;
   display:flex; align-items:center; gap:4px;
 }
-.price::before{content:"★"; color:#FFC107;}
+.price::before{content:""; color:#FFC107;}
 
   :root{
     --tg-blue:#30A4F2; --tg-yellow:#FFCC00; --tg-violet:#6C5CFF; --tg-teal:#00C896;
@@ -81,7 +81,13 @@ html, body{
 }
 
 /* но ВНУТРИ магазина нужен вертикальный скролл */
-#gift-scroll{ touch-action:pan-y; }
+#gift-scroll{
+  flex:1;
+  overflow-y:auto;     /* разрешаем вертикальный скролл                */
+  overflow-x:hidden;   /* полностью режем горизонтальный               */
+  touch-action:pan-y;  /* на мобильных: только жест «вверх–вниз»       */
+  overscroll-behavior:contain; /* убирает «боковой» bounce на iOS/Android */
+}
 
 </style>
 </head>
@@ -122,14 +128,14 @@ if (user.photo_url) document.getElementById('avatar').src = user.photo_url;
 
 /* ---------- ДАННЫЕ ---------- */
 const gifts = [
-  {id:1,gif:'/snup1.gif',color:'#30A4F2'},
-  {id:2,gif:'',color:'#30A4F2'},
-  {id:3,gif:'',color:'#30A4F2'},
-  {id:4,gif:'',color:'#30A4F2'},
-  {id:5,gif:'',color:'#30A4F2'},
-  {id:6,gif:'',color:'#30A4F2'},
-  {id:7,gif:'',color:'#30A4F2'},
-  {id:8,gif:'',color:'#30A4F2'},
+  {id:1,gif:'/снуп.gif',color:'#30A4F2'},
+  {id:2,gif:'/яйцо.gif',color:'#30A4F2'},
+  {id:3,gif:'/сигара снупа.gif',color:'#30A4F2'},
+  {id:4,gif:'/кока.gif',color:'#30A4F2'},
+  {id:5,gif:'/машина.gif',color:'#30A4F2'},
+  {id:6,gif:'/рука.gif',color:'#30A4F2'},
+  {id:7,gif:'/',color:'#30A4F2'},
+  {id:8,gif:'/',color:'#30A4F2'},
   {id:9,gif:'',color:'#30A4F2'},
   {id:10,gif:'',color:'#30A4F2'},
   {id:11,gif:'',color:'#30A4F2'},
