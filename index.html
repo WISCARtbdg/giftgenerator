@@ -98,6 +98,12 @@ html, body{
     <img id="gift-layer" src="" alt="" style="display:none;">
   </div>
   <div id="name">Гость</div>
+  <input id="name-edit"
+       style="margin-top:8px;padding:4px 8px;border-radius:6px;border:none;font-size:16px;text-align:center;"
+       placeholder="Введите имя">
+
+<input id="avatar-file" type="file" accept="image/*"
+       style="margin-top:8px;color:#fff">
 
   <button id="gift-btn">подарки</button>
 
@@ -118,6 +124,48 @@ html, body{
     </div>
   </div>
 </div>
+
+<script>
+const tg = window.Telegram.WebApp; tg.ready();
+
+const nameEdit   = document.getElementById('name-edit');   
+const avatarImg  = document.getElementById('avatar');      
+const avatarFile = document.getElementById('avatar-file'); 
+
+const saved = JSON.parse(localStorage.getItem('profile') || '{}');
+if (saved.name)       { nameEdit.value = saved.name;  document.getElementById('name').textContent = saved.name; }
+if (saved.avatarData) { avatarImg.src  = saved.avatarData; }
+
+nameEdit.oninput = () => {
+  document.getElementById('name').textContent = nameEdit.value || 'Гость';
+  saveProfile();                         
+};
+
+avatarFile.onchange = e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    avatarImg.src = ev.target.result;    
+    saveProfile();
+  };
+  reader.readAsDataURL(file);
+};
+
+function saveProfile(){
+  const profile = {
+    name:       nameEdit.value,
+    avatarData: avatarImg.src.startsWith('data:') ? avatarImg.src : null,
+    giftId:     selectedGift?.id || null          
+  };
+  localStorage.setItem('profile', JSON.stringify(profile));
+}
+
+if (saved.giftId){
+  const g = gifts.find(x => x.id === saved.giftId);
+  if (g){ selectedGift = g; preview(); }          
+}
+</script>
 
 
 <script>
@@ -191,7 +239,7 @@ const grid = document.getElementById('gift-grid');
 gifts.forEach(g=>{
   const card=document.createElement('div');
   card.className='gift-card';
-  card.innerHTML = `
+  card.innerHTML = `<img loading="lazy" src="${g.gif}" alt="">';
   <img loading="lazy" src="${g.gif}" alt="">
   <div class="price">${g.price}</div>`;
   card.onclick = ()=>{                
@@ -200,6 +248,12 @@ gifts.forEach(g=>{
     modal.classList.remove('show');   
   };
   grid.appendChild(card);
+
+  if (saved.giftId){
+  const g = gifts.find(x => x.id === saved.giftId);
+  if (g){ selectedGift = g; preview(); }
+}
+
 });
 
 
@@ -220,8 +274,21 @@ function selectBg(c,el){
 function preview(){
   const img=document.getElementById('gift-layer');
   if(selectedGift){ img.src=selectedGift.gif; img.style.display='block'; }
-}
 
+    if (selectedGift){
+    document.getElementById('gift-layer').src = selectedGift.gif;
+    document.getElementById('gift-layer').style.display='block';
+  }
+  saveProfile();        // ← сохраняем каждый раз
+}
+function saveProfile(){
+  const profile = {
+    name:       nameEdit.value,
+    avatarData: avatarImg.src.startsWith('data:') ? avatarImg.src : null,
+    giftId:     selectedGift?.id || null
+  };
+  localStorage.setItem('profile', JSON.stringify(profile));
+}
 
 // --- обработка открытия / закрытия ---
 const modal = document.getElementById('modal');
