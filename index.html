@@ -79,7 +79,7 @@
   </div>
   <div id="name">Гость</div>
 
-  <button id="gift-btn">Подарки 🎁</button>
+  <button id="gift-btn">подарки</button>
 
   <!-- МОДАЛКА -->
   <!-- стало -->
@@ -173,12 +173,11 @@ gifts.forEach(g=>{
   card.className='gift-card';
   card.innerHTML = `
     <img src="${g.gif}" alt="">
-    <div class="price">${g.price}</div>
-  `;
-  card.onclick = ()=>{                // выбор подарка ➜ превью поверх аватара
+    <div class="price">${g.price}</div>`;
+  card.onclick = ()=>{                
     selectedGift=g;
     preview();
-    modal.classList.remove('show');   // закрываем
+    modal.classList.remove('show');   
   };
   grid.appendChild(card);
 });
@@ -215,7 +214,6 @@ function selectBg(c,el){
 function preview(){
   const img=document.getElementById('gift-layer');
   if(selectedGift){ img.src=selectedGift.gif; img.style.display='block'; }
-  if(selectedBg){ document.body.style.background=`radial-gradient(circle,${selectedBg} 0%,${selectedBg}40%,#5a5a5a 100%)`; }
 }
 
 /* шаги модалки */
@@ -223,10 +221,10 @@ const stepGift=document.getElementById('step‑gift');
 const stepBg=document.getElementById('step‑bg');
 // --- обработка открытия / закрытия ---
 const modal = document.getElementById('modal');
-document.getElementById('gift-btn').onclick = () => modal.classList.add('show');   // открыть
-document.getElementById('close').onclick    = () => modal.classList.remove('show'); // «✕»
-modal.onclick = e => { if (e.target.id === 'modal') modal.classList.remove('show'); }; // клик по затемнёнке
-// --------------------------------------
+document.getElementById('gift-btn').onclick = () => modal.classList.add('show');   
+document.getElementById('close').onclick    = () => modal.classList.remove('show'); 
+modal.onclick = e => { if (e.target.id === 'modal') modal.classList.remove('show'); }; 
+
 
 function openStep(step){ [stepGift,stepBg].forEach(s=>s.classList.remove('active')); step.classList.add('active'); }
 openStep(stepGift);
