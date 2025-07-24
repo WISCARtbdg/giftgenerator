@@ -4,150 +4,308 @@
 <meta charset="utf-8">
 <title>Gift Profile Mini‑App</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<!-- defer — скрипт загрузится после HTML -->
-<script defer src="https://telegram.org/js/telegram-web-app.js"></script>
+<script defer src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
+    /* полноэкранная модалка вместо белого прямоугольника */
+#modal {padding:0; background:var(--bg-modal);}
+#modal-inner{           /* растягиваем на 100 % */
+  width:100%; height:100%; border-radius:0; padding:16px;
+  display:flex; flex-direction:column;
+}
+/* скроллим внутри, а не по body */
+#gift-scroll{flex:1; overflow-y:auto; padding-bottom:80px;}
+/* GRID 3×N */
+.gift-grid{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:12px;
+}
+/* карточка */
+.gift-card{
+  background:#1c1c1c; border-radius:12px; padding:12px;
+  display:flex; flex-direction:column; align-items:center;
+  transition:transform .15s;
+}
+.gift-card:hover{transform:translateY(-4px);}
+.gift-card img{width:72px;height:72px;object-fit:contain}
+.price{
+  margin-top:6px; font-size:14px; color:#FFC107;
+  display:flex; align-items:center; gap:4px;
+}
+.price::before{content:""; color:#FFC107;}
+
   :root{
-    --tg-blue:#30A4F2; --tg-teal:#00C896;
-    --bg-btn:#1D9BF0;  --bg-modal:rgba(0,0,0,.75);
+    --tg-blue:#30A4F2; --tg-yellow:#FFCC00; --tg-violet:#6C5CFF; --tg-teal:#00C896;
+    --bg-modal:rgba(0,0,0,.75); --bg-btn:#1D9BF0;
   }
   *{box-sizing:border-box;margin:0;padding:0;font-family:sans-serif;}
+  /* ▸ Градиент: центр тёмный, к краям светлее */
   body{
     min-height:100vh;display:flex;flex-direction:column;align-items:center;text-align:center;
     background:radial-gradient(circle,#2b2b2b 0%,#3d3d3d 40%,#5a5a5a 100%);color:#fff;
-    overflow:hidden;position:fixed;touch-action:none;overscroll-behavior:none;
   }
-  /* аватар */
   #avatar-box{position:relative;margin-top:40px}
   #avatar{width:160px;height:160px;border-radius:50%;object-fit:cover;border:4px solid var(--tg-blue);}
   #gift-layer{position:absolute;inset:0;width:160px;height:160px;pointer-events:none;}
+
   #name{margin-top:12px;font-size:20px;font-weight:600;}
-
-  /* поля ввода */
-  #name-edit,#avatar-file{margin-top:8px;padding:4px 8px;border-radius:6px;border:none;font-size:16px;text-align:center;}
-
-  /* кнопка «Подарки» */
   #gift-btn{
     position:fixed;left:50%;bottom:16px;transform:translateX(-50%);
     background:var(--bg-btn);color:#fff;border:none;border-radius:24px;
     padding:14px 32px;font-size:18px;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.15);
   }
 
-  /* модалка на весь экран */
-  #modal{display:none;position:fixed;inset:0;background:var(--bg-modal);}
+  /* ── Модалка ─────────────────────────────────────────────────── */
+  #modal{display:none;position:fixed;inset:0;background:var(--bg-modal);padding:24px;overflow:auto;}
   #modal.show{display:block;}
-  #modal-inner{width:100%;height:100%;display:flex;flex-direction:column;padding:16px;}
-  #close{align-self:flex-end;background:none;border:none;color:#fff;font-size:24px;cursor:pointer;}
+  #modal-inner{background:#fff;color:#222;border-radius:12px;padding:20px;max-width:420px;margin:40px auto;}
+  h3{margin:12px 0 8px;font-size:18px;}
+  .gift-option{width:40px;height:40px;border-radius:8px;object-fit:cover;cursor:pointer;margin:6px;filter:grayscale(20%);}
+  .gift-option.selected{outline:3px solid var(--tg-blue);}
+  .bg-option{width:36px;height:36px;border-radius:50%;display:inline-block;cursor:pointer;margin:4px;border:2px solid transparent;}
+  .bg-option.selected{border-color:#000;}
+  #next,#save{margin-top:18px;padding:10px 24px;font-size:16px;border:none;border-radius:20px;color:#fff;cursor:pointer;}
+  #next{background:var(--tg-blue);}
+  #save{background:var(--tg-teal);}
+  /* скрываем второй шаг до тех пор, пока не выберут подарок */
+  .step{display:none;}
+  .step.active{display:block;}
 
-  /* сетка подарков */
-  #gift-scroll{flex:1;overflow-y:auto;overflow-x:hidden;touch-action:pan-y;overscroll-behavior:contain;padding-bottom:80px;}
-  .gift-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
-  .gift-card{background:#1c1c1c;border-radius:12px;padding:12px;display:flex;justify-content:center;transition:transform .15s;cursor:pointer;}
-  .gift-card:hover{transform:translateY(-4px);}
-  .gift-card img{width:72px;height:72px;object-fit:contain}
+  /* ——— Блокируем скролл и «пружину» всей страницы ——— */
+html, body{
+  width:100%; height:100%;
+  margin:0;
+  overflow:hidden;          /* убираем системный скролл */
+  position:fixed;           /* страница «приклеена» */
+  overscroll-behavior:none; /* отключаем iOS‑bounce */
+  touch-action:none;        /* запрещаем горизонт/верт‑панораму */
+}
+
+/* но ВНУТРИ магазина нужен вертикальный скролл */
+#gift-scroll{
+  flex:1;
+  overflow-y:auto;     /* разрешаем вертикальный скролл                */
+  overflow-x:hidden;   /* полностью режем горизонтальный               */
+  touch-action:pan-y;  /* на мобильных: только жест «вверх–вниз»       */
+  overscroll-behavior:contain; /* убирает «боковой» bounce на iOS/Android */
+}
+
 </style>
 </head>
-
 <body>
-  <!-- профиль -->
   <div id="avatar-box">
     <img id="avatar" src="https://placehold.co/160x160?text=%F0%9F%92%BB" alt="avatar">
     <img id="gift-layer" src="" alt="" style="display:none;">
   </div>
   <div id="name">Гость</div>
+  <input id="name-edit"
+       style="margin-top:8px;padding:4px 8px;border-radius:6px;border:none;font-size:16px;text-align:center;"
+       placeholder="Введите имя">
 
-  <!-- редактирование -->
-  <input id="name-edit" placeholder="Введите имя">
-  <input id="avatar-file" type="file" accept="image/*">
+<input id="avatar-file" type="file" accept="image/*"
+       style="margin-top:8px;color:#fff">
 
-  <!-- кнопка -->
-  <button id="gift-btn">Подарки</button>
+  <button id="gift-btn">подарки</button>
 
-  <!-- модалка -->
-  <div id="modal">
-    <div id="modal-inner">
-      <button id="close">✕</button>
-      <div id="gift-scroll">
-        <div class="gift-grid" id="gift-grid"></div>
-      </div>
+  <!-- МОДАЛКА -->
+  <!-- стало -->
+<div id="modal">
+  <div id="modal-inner">
+    <!-- кнопка закрыть -->
+    <button id="close"
+            style="align-self:flex-end;background:none;border:none;color:#fff;font-size:20px;">
+      ✕
+    </button>
+
+    <!-- область прокрутки -->
+    <div id="gift-scroll">
+      <!-- сюда JS положит карточки -->
+      <div class="gift-grid" id="gift-grid"></div>
     </div>
   </div>
+</div>
 
 <script>
-/* ─── Инициализация Telegram ──────────────────────────────── */
 const tg = window.Telegram.WebApp; tg.ready();
 
-/* ─── DOM‑ссылки ──────────────────────────────────────────── */
-const nameEdit   = document.getElementById('name-edit');
-const avatarImg  = document.getElementById('avatar');
-const avatarFile = document.getElementById('avatar-file');
-const modal      = document.getElementById('modal');
-const giftGrid   = document.getElementById('gift-grid');
+const nameEdit   = document.getElementById('name-edit');   
+const avatarImg  = document.getElementById('avatar');      
+const avatarFile = document.getElementById('avatar-file'); 
 
-/* ─── Каталог подарков ────────────────────────────────────── */
+const saved = JSON.parse(localStorage.getItem('profile')  '{}');
+if (saved.name)       { nameEdit.value = saved.name;  document.getElementById('name').textContent = saved.name; }
+if (saved.avatarData) { avatarImg.src  = saved.avatarData; }
+
+nameEdit.oninput = () => {
+  document.getElementById('name').textContent = nameEdit.value  'Гость';
+  saveProfile();                         
+};
+
+avatarFile.onchange = e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    avatarImg.src = ev.target.result;    
+    saveProfile();
+  };
+  reader.readAsDataURL(file);
+};
+
+function saveProfile(){
+  const profile = {
+    name:       nameEdit.value,
+    avatarData: avatarImg.src.startsWith('data:') ? avatarImg.src : null,
+    giftId:     selectedGift?.id  null          
+  };
+  localStorage.setItem('profile', JSON.stringify(profile));
+}
+
+if (saved.giftId){
+  const g = gifts.find(x => x.id === saved.giftId);
+  if (g){ selectedGift = g; preview(); }          
+}
+</script>
+
+
+<script>
+const tg = window.Telegram.WebApp; tg.ready();
+const user = tg.initDataUnsafe?.user  {};
+document.getElementById('name').textContent = user.first_name  'Гость';
+if (user.photo_url) document.getElementById('avatar').src = user.photo_url;
+
+/* ---------- ДАННЫЕ ---------- */
 const gifts = [
-  {id:1,gif:'/снуп.gif'},  {id:2,gif:'/яйцо.gif'},
-  {id:3,gif:'/рука.gif'},  {id:4,gif:'/машина.gif'},
-  {id:5,gif:'/букет.gif'}, {id:6,gif:'/роза.gif'}
+  {id:1,gif:'/снуп.gif',color:'#30A4F2'},
+  {id:2,gif:'/яйцо.gif',color:'#30A4F2'},
+  {id:3,gif:'/сигара снупа.gif',color:'#30A4F2'},
+  {id:4,gif:'/кока.gif',color:'#30A4F2'},
+  {id:5,gif:'/машина.gif',color:'#30A4F2'},
+  {id:6,gif:'/рука.gif',color:'#30A4F2'},
+  {id:7,gif:'/банка.gif',color:'#30A4F2'},
+  {id:8,gif:'/б-дай.gif',color:'#30A4F2'},
+  {id:9,gif:'/8марта.gif',color:'#30A4F2'},
+  {id:10,gif:'/бел.gif',color:'#30A4F2'},
+  {id:11,gif:'/брюлик.gif',color:'#30A4F2'},
+  {id:12,gif:'/букет.gif',color:'#30A4F2'},
+  {id:13,gif:'/глаз.gif',color:'#30A4F2'},
+  {id:14,gif:'/год.gif',color:'#30A4F2'},
+  {id:15,gif:'/желе.gif',color:'#30A4F2'},
+  {id:16,gif:'/зелье.gif',color:'#30A4F2'},
+  {id:17,gif:'/змея.gif',color:'#30A4F2'},
+  {id:18,gif:'/календарь.gif',color:'#30A4F2'},
+  {id:19,gif:'/клубника.gif',color:'#30A4F2'},
+  {id:20,gif:'/кольцо с брюликом.gif',color:'#30A4F2'},
+  {id:21,gif:'/кольцо.gif',color:'#30A4F2'},
+  {id:22,gif:'/меч.gif',color:'#30A4F2'},
+  {id:23,gif:'/мишка.gif',color:'#30A4F2'},
+  {id:24,gif:'/носок.gif',color:'#30A4F2'},
+  {id:25,gif:'/парфюм.gif',color:'#30A4F2'},
+  {id:26,gif:'/пепа.gif',color:'#30A4F2'},
+  {id:27,gif:'/персик.gif',color:'#30A4F2'},
+  {id:28,gif:'/печенька.gif',color:'#30A4F2'},
+  {id:29,gif:'/роза.gif',color:'#30A4F2'},
+  {id:30,gif:'/самотык.gif',color:'#30A4F2'},
+  {id:31,gif:'/санта.gif',color:'#30A4F2'},
+  {id:32,gif:'/сердце.gif',color:'#30A4F2'},
+  {id:33,gif:'/слкшать .gif',color:'#30A4F2'},
+  {id:34,gif:'/сумка.gif',color:'#30A4F2'},
+  {id:25,gif:'/торт.gif',color:'#30A4F2'},
+  {id:36,gif:'/тыква.gif',color:'#30A4F2'},
+  {id:37,gif:'/цветок.gif',color:'#30A4F2'},
+  {id:38,gif:'/череп.gif',color:'#30A4F2'},
+  {id:39,gif:'/чупик.gif',color:'#30A4F2'},
+  {id:40,gif:'/',color:'#30A4F2'},
+  {id:41,gif:'/',color:'#30A4F2'},
+  {id:42,gif:'/',color:'#30A4F2'},
+  {id:43,gif:'/',color:'#30A4F2'},
+  {id:44,gif:'/',color:'#30A4F2'},
+  {id:45,gif:'/',color:'#30A4F2'},
+  {id:46,gif:'/',color:'#30A4F2'},
+  {id:47,gif:'/',color:'#30A4F2'},
+  {id:48,gif:'/',color:'#30A4F2'},
+  {id:49,gif:'/',color:'#30A4F2'},
+  {id:50,gif:'/',color:'#30A4F2'},
+  {id:51,gif:'/',color:'#30A4F2'},
+  {id:52,gif:'/',color:'#30A4F2'},
+  {id:53,gif:'/',color:'#30A4F2'},
+  {id:54,gif:'/',color:'#30A4F2'},
+  {id:55,gif:'/',color:'#30A4F2'},
 ];
+const backgrounds = ['#30A4F2','#FFCC00','#6C5CFF','#00C896'];
 
-/* ─── Сохранения ──────────────────────────────────────────── */
-let selectedGift = null;
-loadProfile();
-
-/* ─── Рендер сетки ────────────────────────────────────────── */
+/* ---------- РЕНДЕР ---------- */
+const grid = document.getElementById('gift-grid');
 gifts.forEach(g=>{
   const card=document.createElement('div');
   card.className='gift-card';
-  card.innerHTML=`<img loading="lazy" src="${g.gif}" alt="">`;
-  card.onclick=()=>{
+  card.innerHTML = `<img loading="lazy" src="${g.gif}" alt="">';
+  <img loading="lazy" src="${g.gif}" alt="">
+  <div class="price">${g.price}</div>`;
+  card.onclick = ()=>{                
     selectedGift=g;
     preview();
-    modal.classList.remove('show');
+    modal.classList.remove('show');   
   };
-  giftGrid.appendChild(card);
+  grid.appendChild(card);
+
+  if (saved.giftId){
+  const g = gifts.find(x => x.id === saved.giftId);
+  if (g){ selectedGift = g; preview(); }
+}
+
 });
 
-/* ─── События ─────────────────────────────────────────────── */
-document.getElementById('gift-btn').onclick=()=>modal.classList.add('show');
-document.getElementById('close').onclick  =()=>modal.classList.remove('show');
-modal.onclick=e=>{if(e.target.id==='modal')modal.classList.remove('show');};
 
-nameEdit.oninput = ()=>{ document.getElementById('name').textContent = nameEdit.value || 'Гость'; saveProfile(); };
-
-avatarFile.onchange = e=>{
-  const file=e.target.files[0]; if(!file) return;
-  const r=new FileReader();
-  r.onload=ev=>{ avatarImg.src=ev.target.result; saveProfile(); };
-  r.readAsDataURL(file);
-};
-
-/* ─── Функции ─────────────────────────────────────────────── */
+/* ---------- ЛОГИКА ---------- */
+let selectedGift=null, selectedBg=null;
+function selectGift(g,el){
+  selectedGift=g;
+  document.querySelectorAll('.gift-option').forEach(x=>x.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('next').disabled=false;
+}
+function selectBg(c,el){
+  selectedBg=c;
+  document.querySelectorAll('.bg-option').forEach(x=>x.classList.remove('selected'));
+  el.classList.add('selected');
+  preview();
+}
 function preview(){
-  const layer=document.getElementById('gift-layer');
-  if(selectedGift){ layer.src=selectedGift.gif; layer.style.display='block'; }
-  saveProfile();
-}
+  const img=document.getElementById('gift-layer');
+  if(selectedGift){ img.src=selectedGift.gif; img.style.display='block'; }
 
-function saveProfile(){
-  const profile={
-    name:nameEdit.value,
-    avatarData:avatarImg.src.startsWith('data:')?avatarImg.src:null,
-    giftId:selectedGift?.id||null
-  };
-  localStorage.setItem('profile',JSON.stringify(profile));
-}
-
-function loadProfile(){
-  const saved=JSON.parse(localStorage.getItem('profile')||'{}');
-  if(saved.name){ nameEdit.value=saved.name; document.getElementById('name').textContent=saved.name; }
-  if(saved.avatarData){ avatarImg.src=saved.avatarData; }
-  if(saved.giftId){
-    const g=gifts.find(x=>x.id===saved.giftId);
-    if(g){ selectedGift=g; preview(); }
+    if (selectedGift){
+    document.getElementById('gift-layer').src = selectedGift.gif;
+    document.getElementById('gift-layer').style.display='block';
   }
+  saveProfile();        // ← сохраняем каждый раз
 }
+function saveProfile(){
+  const profile = {
+    name:       nameEdit.value,
+    avatarData: avatarImg.src.startsWith
+    ('data:') ? avatarImg.src : null,
+    giftId:     selectedGift?.id  null 
+    
+  };
+  localStorage.setItem('profile', JSON.stringify(profile));
+}
+
+// --- обработка открытия / закрытия ---
+const modal = document.getElementById('modal');
+document.getElementById('gift-btn').onclick = () => modal.classList.add('show');   
+document.getElementById('close').onclick    = () => modal.classList.remove('show'); 
+modal.onclick = e => { if (e.target.id === 'modal') modal.classList.remove('show'); }; 
+
+
+function openStep(step){ [stepGift,stepBg].forEach(s=>s.classList.remove('active')); step.classList.add('active'); }
+openStep(stepGift);
+
+
+  document.getElementById('modal').classList.remove('show');
+  preview(); // применяем выбор
+  // здесь можно вызвать API /save
+
 </script>
 </body>
 </html>
