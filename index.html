@@ -7,6 +7,32 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
+    /* полноэкранная модалка вместо белого прямоугольника */
+#modal {padding:0; background:var(--bg-modal);}
+#modal-inner{           /* растягиваем на 100 % */
+  width:100%; height:100%; border-radius:0; padding:16px;
+  display:flex; flex-direction:column;
+}
+/* скроллим внутри, а не по body */
+#gift-scroll{flex:1; overflow-y:auto; padding-bottom:80px;}
+/* GRID 3×N */
+.gift-grid{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:12px;
+}
+/* карточка */
+.gift-card{
+  background:#1c1c1c; border-radius:12px; padding:12px;
+  display:flex; flex-direction:column; align-items:center;
+  transition:transform .15s;
+}
+.gift-card:hover{transform:translateY(-4px);}
+.gift-card img{width:72px;height:72px;object-fit:contain}
+.price{
+  margin-top:6px; font-size:14px; color:#FFC107;
+  display:flex; align-items:center; gap:4px;
+}
+.price::before{content:"★"; color:#FFC107;}
+
   :root{
     --tg-blue:#30A4F2; --tg-yellow:#FFCC00; --tg-violet:#6C5CFF; --tg-teal:#00C896;
     --bg-modal:rgba(0,0,0,.75); --bg-btn:#1D9BF0;
@@ -56,22 +82,23 @@
   <button id="gift-btn">Подарки 🎁</button>
 
   <!-- МОДАЛКА -->
-  <div id="modal">
-    <div id="modal-inner">
-      <!-- Шаг 1 -->
-      <div class="step" id="step‑gift">
-        <h3>Выбери подарок</h3>
-        <div id="gift-list"></div>
-        <button id="next" disabled>Дальше</button>
-      </div>
-      <!-- Шаг 2 -->
-      <div class="step" id="step‑bg">
-        <h3>Цвет фона</h3>
-        <div id="bg-list"></div>
-        <button id="save">Закрепить</button>
-      </div>
+  <!-- стало -->
+<div id="modal">
+  <div id="modal-inner">
+    <!-- кнопка закрыть -->
+    <button id="close"
+            style="align-self:flex-end;background:none;border:none;color:#fff;font-size:20px;">
+      ✕
+    </button>
+
+    <!-- область прокрутки -->
+    <div id="gift-scroll">
+      <!-- сюда JS положит карточки -->
+      <div class="gift-grid" id="gift-grid"></div>
     </div>
   </div>
+</div>
+
 
 <script>
 const tg = window.Telegram.WebApp; tg.ready();
@@ -140,6 +167,22 @@ const gifts = [
 const backgrounds = ['#30A4F2','#FFCC00','#6C5CFF','#00C896'];
 
 /* ---------- РЕНДЕР ---------- */
+const grid = document.getElementById('gift-grid');
+gifts.forEach(g=>{
+  const card=document.createElement('div');
+  card.className='gift-card';
+  card.innerHTML = `
+    <img src="${g.gif}" alt="">
+    <div class="price">${g.price}</div>
+  `;
+  card.onclick = ()=>{                // выбор подарка ➜ превью поверх аватара
+    selectedGift=g;
+    preview();
+    modal.classList.remove('show');   // закрываем
+  };
+  grid.appendChild(card);
+});
+
 const giftList = document.getElementById('gift-list');
 gifts.forEach(g=>{
   const img=document.createElement('img');
@@ -178,13 +221,18 @@ function preview(){
 /* шаги модалки */
 const stepGift=document.getElementById('step‑gift');
 const stepBg=document.getElementById('step‑bg');
+// --- обработка открытия / закрытия ---
+const modal = document.getElementById('modal');
+document.getElementById('gift-btn').onclick = () => modal.classList.add('show');   // открыть
+document.getElementById('close').onclick    = () => modal.classList.remove('show'); // «✕»
+modal.onclick = e => { if (e.target.id === 'modal') modal.classList.remove('show'); }; // клик по затемнёнке
+// --------------------------------------
+
 function openStep(step){ [stepGift,stepBg].forEach(s=>s.classList.remove('active')); step.classList.add('active'); }
 openStep(stepGift);
 
-document.getElementById('gift-btn').onclick=()=>{ openStep(stepGift); document.getElementById('modal').classList.add('show'); };
 document.getElementById('next').onclick=()=>openStep(stepBg);
 
-document.getElementById('modal').onclick=e=>{ if(e.target.id==='modal') e.target.classList.remove('show'); };
 
 document.getElementById('save').onclick=async()=>{
   document.getElementById('modal').classList.remove('show');
