@@ -182,20 +182,8 @@ gifts.forEach(g=>{
   grid.appendChild(card);
 });
 
-const giftList = document.getElementById('gift-list');
-gifts.forEach(g=>{
-  const img=document.createElement('img');
-  img.className='gift-option'; img.src=g.gif;
-  img.onclick=()=>selectGift(g,img);
-  giftList.appendChild(img);
-});
-const bgList=document.getElementById('bg-list');
-backgrounds.forEach(c=>{
-  const d=document.createElement('span');
-  d.className='bg-option'; d.style.background=c;
-  d.onclick=()=>selectBg(c,d);
-  bgList.appendChild(d);
-});
+
+
 
 /* ---------- ЛОГИКА ---------- */
 let selectedGift=null, selectedBg=null;
@@ -216,9 +204,7 @@ function preview(){
   if(selectedGift){ img.src=selectedGift.gif; img.style.display='block'; }
 }
 
-/* шаги модалки */
-const stepGift=document.getElementById('step‑gift');
-const stepBg=document.getElementById('step‑bg');
+
 // --- обработка открытия / закрытия ---
 const modal = document.getElementById('modal');
 document.getElementById('gift-btn').onclick = () => modal.classList.add('show');   
@@ -229,14 +215,11 @@ modal.onclick = e => { if (e.target.id === 'modal') modal.classList.remove('show
 function openStep(step){ [stepGift,stepBg].forEach(s=>s.classList.remove('active')); step.classList.add('active'); }
 openStep(stepGift);
 
-document.getElementById('next').onclick=()=>openStep(stepBg);
 
-
-document.getElementById('save').onclick=async()=>{
   document.getElementById('modal').classList.remove('show');
   preview(); // применяем выбор
   // здесь можно вызвать API /save
-};
+
 </script>
 </body>
 </html>
