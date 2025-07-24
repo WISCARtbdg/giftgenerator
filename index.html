@@ -69,6 +69,20 @@
   /* скрываем второй шаг до тех пор, пока не выберут подарок */
   .step{display:none;}
   .step.active{display:block;}
+
+  /* ——— Блокируем скролл и «пружину» всей страницы ——— */
+html, body{
+  width:100%; height:100%;
+  margin:0;
+  overflow:hidden;          /* убираем системный скролл */
+  position:fixed;           /* страница «приклеена» */
+  overscroll-behavior:none; /* отключаем iOS‑bounce */
+  touch-action:none;        /* запрещаем горизонт/верт‑панораму */
+}
+
+/* но ВНУТРИ магазина нужен вертикальный скролл */
+#gift-scroll{ touch-action:pan-y; }
+
 </style>
 </head>
 
