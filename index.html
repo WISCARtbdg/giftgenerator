@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Gift Profile Mini‑App</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script defer src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
     /* полноэкранная модалка вместо белого прямоугольника */
@@ -192,8 +192,8 @@ gifts.forEach(g=>{
   const card=document.createElement('div');
   card.className='gift-card';
   card.innerHTML = `
-    <img src="${g.gif}" alt="">
-    <div class="price">${g.price}</div>`;
+  <img loading="lazy" src="${g.gif}" alt="">
+  <div class="price">${g.price}</div>`;
   card.onclick = ()=>{                
     selectedGift=g;
     preview();
@@ -201,8 +201,6 @@ gifts.forEach(g=>{
   };
   grid.appendChild(card);
 });
-
-
 
 
 /* ---------- ЛОГИКА ---------- */
