@@ -212,22 +212,6 @@ const gifts = [
   {id:37,gif:'/цветок.gif',color:'#30A4F2'},
   {id:38,gif:'/череп.gif',color:'#30A4F2'},
   {id:39,gif:'/чупик.gif',color:'#30A4F2'},
-  {id:40,gif:'/',color:'#30A4F2'},
-  {id:41,gif:'/',color:'#30A4F2'},
-  {id:42,gif:'/',color:'#30A4F2'},
-  {id:43,gif:'/',color:'#30A4F2'},
-  {id:44,gif:'/',color:'#30A4F2'},
-  {id:45,gif:'/',color:'#30A4F2'},
-  {id:46,gif:'/',color:'#30A4F2'},
-  {id:47,gif:'/',color:'#30A4F2'},
-  {id:48,gif:'/',color:'#30A4F2'},
-  {id:49,gif:'/',color:'#30A4F2'},
-  {id:50,gif:'/',color:'#30A4F2'},
-  {id:51,gif:'/',color:'#30A4F2'},
-  {id:52,gif:'/',color:'#30A4F2'},
-  {id:53,gif:'/',color:'#30A4F2'},
-  {id:54,gif:'/',color:'#30A4F2'},
-  {id:55,gif:'/',color:'#30A4F2'},
 ];
 const backgrounds = ['#30A4F2','#FFCC00','#6C5CFF','#00C896'];
 const grid = document.getElementById('gift-grid'); 
@@ -235,7 +219,7 @@ gifts.forEach(g => { const card = document.createElement('div'); card.className 
  card.innerHTML = `<img loading="lazy" src="${g.gif}" alt="">`;
   card.onclick = () => { selectedGift = g; preview(); modal.classList.remove('show');
    }; grid.appendChild(card); });
-   
+
 /* ---------- РЕНДЕР ---------- */
 
 /* ---------- восстановление сохранённого подарка ---------- */
