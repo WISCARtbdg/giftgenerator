@@ -69,8 +69,8 @@ const giftGrid   = document.getElementById('gift-grid');
 
 /* 3. ваш список GIF — полностью, включая пустые '/' */
 const gifts = [
-  {id:1 ,gif:'/снуп.gif'},{id:2 ,
-    gif:'/яйцо.gif'},
+{id:1 ,gif:'/снуп.gif'},
+{id:2 ,gif:'/яйцо.gif'},
 {id:3 ,gif:'/сигара снупа.gif'},
 {id:4 ,gif:'/кока.gif'},
 {id:5 ,gif:'/машина.gif'},
@@ -134,16 +134,21 @@ if(saved.avatarData){ avatarImg.src=saved.avatarData; }
 
 /* 5. рендер сетки (исправлена строка innerHTML) */
 gifts.forEach(g=>{
-  const card=document.createElement('div');
-  card.className='gift-card';
-  card.innerHTML=`<img loading="lazy" src="${g.gif}" alt="">`;
-  card.onclick=()=>{ selectedGift=g; applyGift(); modal.classList.remove('show'); };
+  const card = document.createElement('div');
+  card.className = 'gift-card';
+  js card.innerHTML = `<img loading="lazy" src="${g.gif}" alt="">`;
+  card.onclick = ()=>{
+    selectedGift = g;
+    applyGift();
+    modal.classList.remove('show');
+  };
   giftGrid.appendChild(card);
-});
-/* восстановим подарок, если он был */
-if(saved.giftId){
-  const g=gifts.find(x=>x.id===saved.giftId);
-  if(g){ selectedGift=g; applyGift(); }
+});                           
+
+// восстановление сохранённого подарка
+if (saved.giftId){
+  const g = gifts.find(x => x.id === saved.giftId);
+  if (g){ selectedGift = g; applyGift(); }
 }
 
 /* 6. события UI */
@@ -178,3 +183,4 @@ function saveProfile(){
 </script>
 </body>
 </html>
+card.innerHTML
