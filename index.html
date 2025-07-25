@@ -126,7 +126,7 @@ html, body{
 </div>
 
 <script>
-const tg = window.Telegram.WebApp; tg.ready();
+const telegram = window.Telegram.WebApp; telegram.ready();
 const nameEdit   = document.getElementById('name-edit');   
 const avatarImg  = document.getElementById('avatar');      
 const avatarFile = document.getElementById('avatar-file'); 
@@ -167,7 +167,6 @@ if (saved.giftId){
 
 
 <script>
-const tg = window.Telegram.WebApp; tg.ready();
 const user = tg.initDataUnsafe?.user || {};
 document.getElementById('name').textContent = user.first_name || 'Гость';
 if (user.photo_url) document.getElementById('avatar').src = user.photo_url;
