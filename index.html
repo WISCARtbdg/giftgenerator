@@ -126,12 +126,10 @@ html, body{
 </div>
 
 <script>
-const telegram = window.Telegram.WebApp; tg.ready();
-
+const tg = window.Telegram.WebApp; tg.ready();
 const nameEdit   = document.getElementById('name-edit');   
 const avatarImg  = document.getElementById('avatar');      
 const avatarFile = document.getElementById('avatar-file'); 
-
 const saved = JSON.parse(localStorage.getItem('profile') || '{}');
 if (saved.name)       { nameEdit.value = saved.name;  document.getElementById('name').textContent = saved.name; }
 if (saved.avatarData) { avatarImg.src  = saved.avatarData; }
@@ -236,27 +234,6 @@ const backgrounds = ['#30A4F2','#FFCC00','#6C5CFF','#00C896'];
 
 /* ---------- РЕНДЕР ---------- */
 
-
-const grid = document.getElementById('gift-grid');
-gifts.forEach(g => {
-  const card = document.createElement('div');
-  card.className = 'gift-card';
-
-  // FIX 1: вся разметка ‑ внутри одной шаблонной строки (``) и ОДНОГО присваивания
-  card.innerHTML = `
-    <img loading="lazy" src="${g.gif}" alt="">
-    <div class="price">${g.price ?? ''}</div>
-  `;
-
-  card.onclick = () => {
-    selectedGift = g;
-    preview();
-    modal.classList.remove('show');
-  };
-
-  grid.appendChild(card);
-});            // FIX 2: закрыли forEach →   );
-
 /* ---------- восстановление сохранённого подарка ---------- */
 if (saved.giftId) {                           // FIX 3: вынесли вне forEach
   const g = gifts.find(x => x.id === saved.giftId);
@@ -290,10 +267,11 @@ document.getElementById('close').onclick    = () => modal.classList.remove('show
 modal.onclick = e => { if (e.target.id === 'modal') modal.classList.remove('show'); };
 
 
-function openStep(step){ [stepGift,stepBg].forEach(s=>s.classList.remove('active')); step.classList.add('active'); }
-openStep(stepGift);
+//function openStep(step){ [stepGift,stepBg].forEach(s=>s.classList.remove('active')); step.classList.add('active'); }
+//openStep(stepGift);
 
 
 </script>
 </body>
 </html>
+openStep(stepGift);
