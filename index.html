@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Gift Profile Mini‑App</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<script defer src="https://telegram.org/js/telegram-web-app.js"></script>
+<script defer src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
     /* полноэкранная модалка вместо белого прямоугольника */
@@ -126,7 +126,7 @@ html, body{
 </div>
 
 <script>
-const telegram = window.Telegram.WebApp; telegram.ready();
+const tg = window.Telegram.WebApp; tg.ready();
 const nameEdit   = document.getElementById('name-edit');   
 const avatarImg  = document.getElementById('avatar');      
 const avatarFile = document.getElementById('avatar-file'); 
@@ -230,7 +230,12 @@ const gifts = [
   {id:55,gif:'/',color:'#30A4F2'},
 ];
 const backgrounds = ['#30A4F2','#FFCC00','#6C5CFF','#00C896'];
-
+const grid = document.getElementById('gift-grid'); 
+gifts.forEach(g => { const card = document.createElement('div'); card.className = 'gift-card';
+ card.innerHTML = `<img loading="lazy" src="${g.gif}" alt="">`;
+  card.onclick = () => { selectedGift = g; preview(); modal.classList.remove('show');
+   }; grid.appendChild(card); });
+   
 /* ---------- РЕНДЕР ---------- */
 
 /* ---------- восстановление сохранённого подарка ---------- */
