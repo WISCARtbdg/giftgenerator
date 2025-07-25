@@ -133,17 +133,17 @@ if(saved.name){ nameEdit.value=saved.name; document.getElementById('name').textC
 if(saved.avatarData){ avatarImg.src=saved.avatarData; }
 
 /* 5. рендер сетки (исправлена строка innerHTML) */
-gifts.forEach(g=>{
+gifts.forEach(g => {
   const card = document.createElement('div');
   card.className = 'gift-card';
-  js card.innerHTML = `<img loading="lazy" src="${g.gif}" alt="">`;
-  card.onclick = ()=>{
+  card.innerHTML = `<img loading="lazy" src="${g.gif}" alt="">`;  // ← 1. вся строка внутри одной `…`
+  card.onclick = () => {
     selectedGift = g;
     applyGift();
     modal.classList.remove('show');
   };
   giftGrid.appendChild(card);
-});                           
+});                          
 
 // восстановление сохранённого подарка
 if (saved.giftId){
